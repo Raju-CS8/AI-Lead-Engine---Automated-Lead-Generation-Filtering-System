@@ -45,11 +45,11 @@ export function AnalyticsPage({ leadsState }: Props) {
                 { title: 'Gap Analysis', data: gapData, key: 'gap', fill: '#10b981' },
                 { title: 'Maturity Breakdown', data: maturityData, key: 'm', fill: '#f59e0b' },
               ].map((chart) => (
-                <Grid item xs={12} md={6} key={chart.title}>
+                <Grid size={{ xs: 12, md: 6 }} key={chart.title}>
                   <Paper style={{ padding: 24 }}>
                     <Typography variant="h6" style={{ fontWeight: 600, marginBottom: 16 }}>{chart.title}</Typography>
                     <ResponsiveContainer width="100%" height={200}>
-                      <BarChart data={chart.data}>
+                      <BarChart data={chart.data as any[]}>
                         <CartesianGrid strokeDasharray="3 3" stroke="#334155" />
                         <XAxis dataKey={chart.key} stroke="#94a3b8" tick={{ fontSize: 11 }} />
                         <YAxis stroke="#94a3b8" />

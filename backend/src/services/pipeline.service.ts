@@ -3,7 +3,7 @@ import { fetchBusinesses } from './overpass.service';
 import { normalizeAll } from './normalizer.service';
 import { enrichBusiness } from './webEnrichment.service';
 import { runIntelligence } from './intelligence';
-import { buildCacheKey, setInCache } from '../utils/cache';
+import { buildCacheKey, setInCache, getFromCache } from '../utils/cache';
 import { logger } from '../utils/logger';
 
 export async function runLeadPipeline(
@@ -11,6 +11,13 @@ export async function runLeadPipeline(
 ): Promise<ApiResponse<Lead[]>> {
   const { industry, location, service, limit } = params;
   const cacheKey = buildCacheKey(industry, location, service);
+  
+  const cachedResponse = getFromCache<ApiResponse<Lead[]>>(cacheKey);
+  if (cachedResponse) {
+    cachedResponse.meta.cached = true;
+    return cachedResponse;
+  }
+
   const start = Date.now();
 
   logger.info('Pipeline starting', params);
@@ -23,35 +30,40 @@ export async function runLeadPipeline(
 
   const leads: Lead[] = [];
 
-  for (const business of businesses) {
-    try {
-      const enrichmentPromise = enrichBusiness(business);
-      const timeoutPromise = new Promise<null>((resolve) =>
-        setTimeout(() => resolve(null), 5000)
-      );
+  const batchSize = 10;
+  for (let i = 0; i < businesses.length; i += batchSize) {
+    const batch = businesses.slice(i, i + batchSize);
 
-      const enrichment = await Promise.race([enrichmentPromise, timeoutPromise]);
-
-      const enrichedBusiness = enrichment
-        ? {
-            ...business,
-            website: enrichment.website,
-            phone: enrichment.phone ?? business.phone,
-          }
-        : business;
-
-      const lead = runIntelligence(enrichedBusiness, service);
-      leads.push(lead);
-    } catch (err) {
-      logger.warn('Failed to process business', {
-        name: business.name,
-        error: err instanceof Error ? err.message : String(err),
-      });
+    await Promise.all(batch.map(async (business) => {
       try {
-        const lead = runIntelligence(business, service);
+        const enrichmentPromise = enrichBusiness(business);
+        const timeoutPromise = new Promise<null>((resolve) =>
+          setTimeout(() => resolve(null), 5000)
+        );
+
+        const enrichment = await Promise.race([enrichmentPromise, timeoutPromise]);
+
+        const enrichedBusiness = enrichment
+          ? {
+              ...business,
+              website: enrichment.website,
+              phone: enrichment.phone ?? business.phone,
+            }
+          : business;
+
+        const lead = runIntelligence(enrichedBusiness, service);
         leads.push(lead);
-      } catch { /* skip */ }
-    }
+      } catch (err) {
+        logger.warn('Failed to process business', {
+          name: business.name,
+          error: err instanceof Error ? err.message : String(err),
+        });
+        try {
+          const lead = runIntelligence(business, service);
+          leads.push(lead);
+        } catch { /* skip */ }
+      }
+    }));
   }
 
   leads.sort((a, b) => b.score.value - a.score.value);

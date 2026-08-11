@@ -25,7 +25,7 @@ export function SavedLeadsPage({ leadsState }: Props) {
             </Paper>
           : <Grid container spacing={3}>
               {savedLeads.map((lead) => (
-                <Grid item xs={12} sm={6} lg={4} key={lead.id}>
+                <Grid size={{ xs: 12, sm: 6, lg: 4 }} key={lead.id}>
                   <LeadCard lead={lead} isSaved={savedIds.has(lead.id)} onSave={saveLead} onRemove={removeSavedLead} />
                 </Grid>
               ))}
