@@ -38,6 +38,7 @@ app.get('/health', (_req, res) => {
 
 // API
 app.use('/api', apiRateLimiter, apiRouter);
+app.use('/', apiRateLimiter, apiRouter);
 
 // 404
 app.use((_req, res) => res.status(404).json({ success: false, error: 'Route not found' }));
