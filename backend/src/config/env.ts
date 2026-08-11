@@ -9,6 +9,7 @@ interface EnvConfig {
   RATE_LIMIT_MAX_REQUESTS: number;
   CACHE_TTL_SECONDS: number;
   OVERPASS_TIMEOUT_MS: number;
+  JWT_SECRET: string;
 }
 
 function getEnvInt(key: string, fallback: number): number {
@@ -29,6 +30,7 @@ function loadConfig(): EnvConfig {
     RATE_LIMIT_MAX_REQUESTS: getEnvInt('RATE_LIMIT_MAX_REQUESTS', 100),
     CACHE_TTL_SECONDS: getEnvInt('CACHE_TTL_SECONDS', 300),
     OVERPASS_TIMEOUT_MS: getEnvInt('OVERPASS_TIMEOUT_MS', 25000),
+    JWT_SECRET: process.env['JWT_SECRET'] ?? 'default_secret_please_change_in_production',
   };
 }
 

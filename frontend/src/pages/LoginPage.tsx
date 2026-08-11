@@ -11,10 +11,14 @@ export function LoginPage() {
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
 
-  function handleLogin() {
+  async function handleLogin() {
     if (!email || !password) { setError('Please enter email and password'); return; }
-    login(email, email.split('@')[0] ?? 'User');
-    navigate('/dashboard');
+    try {
+      await login(email, password);
+      navigate('/dashboard');
+    } catch (err: any) {
+      setError(err.response?.data?.error || err.message || 'Login failed');
+    }
   }
 
   return (

@@ -10,6 +10,7 @@ import { logger } from './utils/logger';
 import { errorMiddleware } from './middleware/error.middleware';
 import { apiRateLimiter } from './middleware/rateLimiter';
 import { apiRouter } from './routes/api.routes';
+import { authRouter } from './routes/auth.routes';
 
 const app = express();
 
@@ -37,6 +38,7 @@ app.get('/health', (_req, res) => {
 });
 
 // API
+app.use('/api/auth', apiRateLimiter, authRouter);
 app.use('/api', apiRateLimiter, apiRouter);
 app.use('/', apiRateLimiter, apiRouter);
 
