@@ -16,7 +16,7 @@ const app = express();
 app.use(helmet());
 app.use(cors({
   origin: (origin, cb) => {
-    if (!origin || env.ALLOWED_ORIGINS.includes(origin)) return cb(null, true);
+    if (!origin || env.ALLOWED_ORIGINS.includes('*') || env.ALLOWED_ORIGINS.includes(origin)) return cb(null, true);
     logger.warn('CORS blocked', { origin });
     cb(new Error(`CORS: ${origin} not allowed`));
   },
